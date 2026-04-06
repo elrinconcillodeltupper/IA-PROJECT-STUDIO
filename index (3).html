@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FORGE Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08080e;--bg2:#0f0f18;--bg3:#16161f;--bg4:#1e1e2e;
+  --accent:#7c6af7;--accent2:#a78bfa;--accent3:#06d6a0;--accent4:#f472b6;
+  --warn:#fbbf24;--danger:#f87171;--info:#60a5fa;
+  --text:#eeeef5;--muted:#5a5a78;--dim:#3a3a52;--border:#1f1f30;
+  --card:#0d0d16;
+}
+html,body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);height:100%;overflow:hidden}
+
+/* ── LOGIN ── */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center}
+#login-screen.hidden{display:none}
+.login-box{width:100%;max-width:360px;padding:0 20px}
+.login-gem{width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;margin-bottom:24px}
+.login-title{font-size:24px;font-weight:800;margin-bottom:4px}
+.login-sub{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-bottom:32px;letter-spacing:.5px}
+.login-label{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;display:block}
+.login-input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-size:14px;font-family:'Syne',sans-serif;outline:none;transition:border .15s;margin-bottom:12px;letter-spacing:2px}
+.login-input:focus{border-color:var(--accent)}
+.login-input.error{border-color:var(--danger);animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.login-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;font-family:'Syne',sans-serif;cursor:pointer;transition:all .15s;margin-top:4px}
+.login-btn:hover{background:#6a58e8;transform:translateY(-1px)}
+.login-btn:active{transform:translateY(0)}
+.login-error{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--danger);margin-top:10px;min-height:16px;text-align:center}
+.login-dots{display:flex;gap:6px;margin-top:40px}
+.ldot{width:4px;height:4px;border-radius:50%;background:var(--border)}
+.ldot:first-child{background:var(--accent)}
+
+/* ── APP ── */
+#app{display:none;height:100vh}
+#app.visible{display:flex}
+.app{display:flex;height:100vh;overflow:hidden;width:100%}
+
+/* SIDEBAR */
+.sidebar{width:210px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.brand{padding:18px 14px 14px;border-bottom:1px solid var(--border)}
+.brand-top{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.brand-gem{width:22px;height:22px;background:var(--accent);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:800;flex-shrink:0}
+.brand-name{font-size:15px;font-weight:800;letter-spacing:-.3px}
+.brand-sub{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1px;padding-left:30px}
+.nav{flex:1;padding:8px 0;overflow-y:auto}
+.nav-group{margin-bottom:4px}
+.nav-group-label{font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:2px;color:var(--dim);padding:10px 14px 4px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;font-size:12px;font-weight:500;color:var(--muted);border-left:2px solid transparent;transition:all .12s;user-select:none}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:rgba(124,106,247,.08);color:var(--accent);border-left-color:var(--accent)}
+.nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;font-size:8px;font-family:'JetBrains Mono',monospace;background:var(--accent);color:#fff;padding:1px 5px;border-radius:8px;min-width:16px;text-align:center}
+.nav-badge.green{background:var(--accent3);color:#000}
+.sidebar-bottom{padding:10px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent3);margin-right:6px;animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.sys-status{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted)}
+.logout-btn{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--dim);cursor:pointer;padding:3px 6px;border-radius:4px;border:1px solid var(--border);transition:all .1s;background:none;white-space:nowrap}
+.logout-btn:hover{color:var(--danger);border-color:var(--danger)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{padding:0 20px;height:48px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:var(--bg);flex-shrink:0}
+.topbar-title{font-size:13px;font-weight:600;flex:1;color:var(--text)}
+.topbar-meta{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted)}
+.topbar-actions{display:flex;gap:8px}
+.btn{border:none;border-radius:6px;font-family:'Syne',sans-serif;font-weight:600;cursor:pointer;transition:all .12s;font-size:11px;padding:6px 12px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#6a58e8;transform:translateY(-1px)}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.view{flex:1;overflow-y:auto;padding:20px;display:none}
+.view.active{display:block}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;position:relative;overflow:hidden}
+.metric::after{content:'';position:absolute;top:0;left:0;right:0;height:1px}
+.metric.purple::after{background:var(--accent)}
+.metric.green::after{background:var(--accent3)}
+.metric.amber::after{background:var(--warn)}
+.metric.blue::after{background:var(--info)}
+.metric-label{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.metric-val{font-size:26px;font-weight:800;line-height:1}
+.metric-sub{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-top:4px}
+.mv-purple{color:var(--accent)}.mv-green{color:var(--accent3)}.mv-amber{color:var(--warn)}.mv-blue{color:var(--info)}
+
+/* QUICK ADD */
+.quick-add{border:1px dashed var(--border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s;margin-bottom:20px;background:rgba(124,106,247,.02)}
+.quick-add:hover{border-color:var(--accent);background:rgba(124,106,247,.06)}
+.qa-icon{color:var(--accent);font-size:16px;flex-shrink:0}
+.qa-text{font-size:12px;color:var(--muted);flex:1}
+.qa-text b{color:var(--accent);font-weight:600}
+.qa-kbd{font-size:9px;font-family:'JetBrains Mono',monospace;background:var(--bg3);border:1px solid var(--border);padding:2px 7px;border-radius:4px;color:var(--muted)}
+
+/* PANELS */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.panel-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text);display:flex;align-items:center;gap:7px}
+.ph-dot{width:6px;height:6px;border-radius:50%}
+.panel-action{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--accent);cursor:pointer;opacity:.7}
+.panel-action:hover{opacity:1}
+
+/* PROJECT CARDS */
+.proj-card{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;position:relative}
+.proj-card:last-child{border-bottom:none}
+.proj-card:hover{background:var(--bg3)}
+.proj-card::before{content:'';position:absolute;left:0;top:14px;bottom:14px;width:2px;border-radius:0 1px 1px 0}
+.proj-card.c-purple::before{background:var(--accent)}
+.proj-card.c-green::before{background:var(--accent3)}
+.proj-card.c-amber::before{background:var(--warn)}
+.proj-card.c-blue::before{background:var(--info)}
+.proj-card.c-pink::before{background:var(--accent4)}
+.proj-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.proj-name{font-size:13px;font-weight:700;flex:1}
+.proj-tag{font-size:8px;font-family:'JetBrains Mono',monospace;padding:2px 6px;border-radius:4px}
+.t-active{background:rgba(6,214,160,.15);color:var(--accent3)}
+.t-idea{background:rgba(124,106,247,.15);color:var(--accent)}
+.t-paused{background:rgba(251,191,36,.15);color:var(--warn)}
+.t-new{background:rgba(96,165,250,.15);color:var(--info)}
+.proj-desc{font-size:10px;color:var(--muted);line-height:1.5;margin-bottom:8px}
+.proj-footer{display:flex;align-items:center;gap:6px}
+.proj-mrr{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--accent3)}
+.proj-agents{display:flex;gap:3px;margin-left:auto}
+.agent-chip{font-size:8px;font-family:'JetBrains Mono',monospace;background:var(--bg3);border:1px solid var(--border);padding:2px 5px;border-radius:3px;color:var(--muted)}
+
+/* LOG TABLE */
+.log-table{width:100%;font-size:11px;border-collapse:collapse}
+.log-table th{text-align:left;padding:8px 12px;font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--muted);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg2);font-weight:500}
+.log-table td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+.log-table tr:last-child td{border-bottom:none}
+.log-table tr:hover td{background:var(--bg3)}
+.log-type{font-size:8px;font-family:'JetBrains Mono',monospace;padding:2px 6px;border-radius:4px;white-space:nowrap}
+.lt-idea{background:rgba(124,106,247,.15);color:var(--accent)}
+.lt-exec{background:rgba(6,214,160,.15);color:var(--accent3)}
+.lt-agent{background:rgba(96,165,250,.15);color:var(--info)}
+.lt-project{background:rgba(251,191,36,.15);color:var(--warn)}
+.lt-system{background:rgba(90,90,120,.2);color:var(--muted)}
+.log-ts{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);white-space:nowrap}
+.log-agent{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--info)}
+.log-proj{font-size:10px;font-weight:500;color:var(--accent2)}
+.log-desc{font-size:11px;color:var(--text);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log-empty{padding:32px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}
+
+/* DB FILTERS */
+.db-filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filter-btn{font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--bg3);border:1px solid var(--border);color:var(--muted);padding:5px 10px;border-radius:6px;cursor:pointer;transition:all .1s}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.filter-btn:hover:not(.active){border-color:var(--accent);color:var(--accent)}
+.db-search{flex:1;min-width:150px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-size:11px;font-family:'JetBrains Mono',monospace;outline:none}
+.db-search:focus{border-color:var(--accent)}
+.db-stats{display:flex;gap:16px;margin-bottom:12px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted)}
+.db-stats span{color:var(--accent);font-weight:600}
+
+/* AGENTS */
+.agent-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border)}
+.agent-row:last-child{border-bottom:none}
+.agent-ava{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;border:1px solid var(--border)}
+.agent-info{flex:1}
+.agent-name{font-size:12px;font-weight:600;margin-bottom:1px}
+.agent-desc{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--muted)}
+.agent-stat{font-size:8px;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:8px}
+.as-on{background:rgba(6,214,160,.15);color:var(--accent3)}
+.as-ready{background:rgba(124,106,247,.15);color:var(--accent)}
+.as-cfg{background:rgba(251,191,36,.15);color:var(--warn)}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center;padding:16px}
+.modal-bg.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:14px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+.modal-head{padding:20px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between}
+.modal-title{font-size:15px;font-weight:800}
+.modal-sub{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-top:2px}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0;line-height:1}
+.modal-body{padding:16px 20px 20px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.field input,.field textarea,.field select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-size:13px;font-family:'Syne',sans-serif;outline:none;transition:border .1s}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
+.field textarea{min-height:70px;resize:vertical}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;padding-top:4px}
+.btn-cancel2{background:transparent;border:1px solid var(--border);color:var(--muted);padding:8px 16px;border-radius:7px;font-size:12px;cursor:pointer;font-family:'Syne',sans-serif}
+.btn-save2{background:var(--accent);color:#fff;border:none;padding:8px 20px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif}
+.btn-save2:hover{background:#6a58e8}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* TOASTS */
+.toast-container{position:fixed;bottom:16px;right:16px;z-index:600;display:flex;flex-direction:column;gap:6px}
+.toast{background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:11px;font-family:'JetBrains Mono',monospace;animation:slideIn .2s ease;max-width:280px}
+.toast.success{border-left:2px solid var(--accent3);color:var(--accent3)}
+.toast.info{border-left:2px solid var(--accent);color:var(--accent)}
+.toast.warn{border-left:2px solid var(--danger);color:var(--danger)}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-gem">F</div>
+    <div class="login-title">FORGE Hub</div>
+    <div class="login-sub">workspace privado · acceso restringido</div>
+    <label class="login-label">contraseña</label>
+    <input class="login-input" id="login-input" type="password" placeholder="••••••••" autocomplete="current-password">
+    <button class="login-btn" onclick="tryLogin()">Entrar</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-dots">
+      <div class="ldot"></div><div class="ldot"></div><div class="ldot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+<div class="app">
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-top">
+        <div class="brand-gem">F</div>
+        <div class="brand-name">FORGE Hub</div>
+      </div>
+      <div class="brand-sub">workspace privado · v2</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-group">
+        <div class="nav-group-label">Principal</div>
+        <div class="nav-item active" data-view="dashboard" onclick="switchView('dashboard',this)"><span class="nav-icon">◈</span>Dashboard</div>
+        <div class="nav-item" data-view="projects" onclick="switchView('projects',this)"><span class="nav-icon">⊞</span>Proyectos<span class="nav-badge" id="nb-projects">0</span></div>
+        <div class="nav-item" data-view="ideas" onclick="switchView('ideas',this)"><span class="nav-icon">◎</span>Ideas Backlog<span class="nav-badge" id="nb-ideas">0</span></div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-group-label">Registro</div>
+        <div class="nav-item" data-view="log" onclick="switchView('log',this)"><span class="nav-icon">▤</span>Base de datos<span class="nav-badge" id="nb-log">0</span></div>
+        <div class="nav-item" data-view="agents" onclick="switchView('agents',this)"><span class="nav-icon">⬡</span>Agentes IA<span class="nav-badge green">3</span></div>
+      </div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div><span class="pulse"></span><span class="sys-status" id="sys-status">cargando...</span></div>
+      <button class="logout-btn" onclick="logout()">salir</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-meta" id="topbar-meta"></div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost" onclick="openModal('project')">+ Proyecto</button>
+        <button class="btn btn-primary" onclick="openModal('idea')">+ Idea</button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="view active" id="view-dashboard">
+      <div class="metrics">
+        <div class="metric purple"><div class="metric-label">Proyectos</div><div class="metric-val mv-purple" id="m-proj">0</div><div class="metric-sub" id="m-proj-sub">activos</div></div>
+        <div class="metric blue"><div class="metric-label">Ideas backlog</div><div class="metric-val mv-blue" id="m-ideas">0</div><div class="metric-sub">capturadas</div></div>
+        <div class="metric amber"><div class="metric-label">Acciones log</div><div class="metric-val mv-amber" id="m-log">0</div><div class="metric-sub">registradas en BD</div></div>
+        <div class="metric green"><div class="metric-label">Agentes</div><div class="metric-val mv-green">3</div><div class="metric-sub">Claude · Notion · n8n</div></div>
+      </div>
+      <div class="quick-add" onclick="openModal('idea')">
+        <div class="qa-icon">✦</div>
+        <div class="qa-text"><b>Captura una idea</b> — se guarda en BD con timestamp, agente y proyecto</div>
+        <div class="qa-kbd">⌘K</div>
+      </div>
+      <div class="row2">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title"><div class="ph-dot" style="background:var(--accent)"></div>Proyectos recientes</div><div class="panel-action" onclick="switchView('projects',document.querySelector('[data-view=projects]'))">ver todos</div></div>
+          <div class="panel-body" id="dash-projects"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title"><div class="ph-dot" style="background:var(--warn)"></div>Últimas entradas BD</div><div class="panel-action" onclick="switchView('log',document.querySelector('[data-view=log]'))">ver log completo</div></div>
+          <div class="panel-body"><table class="log-table" id="dash-log"><tbody></tbody></table></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title"><div class="ph-dot" style="background:var(--accent3)"></div>Ideas recientes</div><div class="panel-action" onclick="switchView('ideas',document.querySelector('[data-view=ideas]'))">ver todas</div></div>
+        <div class="panel-body"><table class="log-table" id="dash-ideas"><tbody></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- PROJECTS -->
+    <div class="view" id="view-projects"><div id="projects-list"></div></div>
+
+    <!-- IDEAS -->
+    <div class="view" id="view-ideas"><div id="ideas-list"></div></div>
+
+    <!-- LOG -->
+    <div class="view" id="view-log">
+      <div class="db-stats">
+        <div>Total: <span id="db-total">0</span></div>
+        <div>Ideas: <span id="db-c-ideas">0</span></div>
+        <div>Ejecuciones: <span id="db-c-exec">0</span></div>
+        <div>Proyectos: <span id="db-c-proj">0</span></div>
+        <div>Sistema: <span id="db-c-sys">0</span></div>
+      </div>
+      <div class="db-filters">
+        <input class="db-search" id="db-search" placeholder="buscar en registro..." oninput="renderLog()">
+        <div class="filter-btn active" onclick="setFilter('all',this)">Todo</div>
+        <div class="filter-btn" onclick="setFilter('idea',this)">Ideas</div>
+        <div class="filter-btn" onclick="setFilter('project',this)">Proyectos</div>
+        <div class="filter-btn" onclick="setFilter('exec',this)">Ejecuciones</div>
+        <div class="filter-btn" onclick="setFilter('system',this)">Sistema</div>
+        <button class="btn btn-ghost" style="font-size:10px;padding:5px 10px" onclick="exportLog()">↓ exportar CSV</button>
+      </div>
+      <div class="panel">
+        <div style="overflow-x:auto">
+          <table class="log-table" id="full-log">
+            <thead><tr><th>#</th><th>Timestamp</th><th>Tipo</th><th>Agente</th><th>Proyecto</th><th>Descripción</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- AGENTS -->
+    <div class="view" id="view-agents">
+      <div class="row2">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title"><div class="ph-dot" style="background:var(--accent3)"></div>Agentes conectados</div></div>
+          <div class="panel-body">
+            <div class="agent-row"><div class="agent-ava" style="background:rgba(124,106,247,.12)">✦</div><div class="agent-info"><div class="agent-name">Claude Sonnet</div><div class="agent-desc">Estrategia · contenido · código · análisis</div></div><span class="agent-stat as-on">activo</span></div>
+            <div class="agent-row"><div class="agent-ava" style="background:rgba(255,255,255,.05);font-weight:700;font-size:11px">N</div><div class="agent-info"><div class="agent-name">Notion AI</div><div class="agent-desc">Documentación · bases de datos</div></div><span class="agent-stat as-ready">conectado</span></div>
+            <div class="agent-row"><div class="agent-ava" style="background:rgba(251,191,36,.08);color:var(--warn)">⚡</div><div class="agent-info"><div class="agent-name">n8n Flows</div><div class="agent-desc">Automatización · webhooks · pipelines</div></div><span class="agent-stat as-cfg">por configurar</span></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title"><div class="ph-dot" style="background:var(--info)"></div>Uso por agente (BD)</div></div>
+          <div class="panel-body" id="agent-stats" style="padding:16px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="modal-title" id="modal-title">Nueva idea</div><div class="modal-sub" id="modal-sub">se guardará en BD con timestamp</div></div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// ── CONTRASEÑA ──────────────────────────────────────────────
+// Cambia esto por tu contraseña antes de subir a Vercel
+const PASSWORD = 'forge2025';
+const SESSION_KEY = 'forge_session';
+
+function tryLogin(){
+  const val = document.getElementById('login-input').value;
+  const err = document.getElementById('login-error');
+  const inp = document.getElementById('login-input');
+  if(val === PASSWORD){
+    sessionStorage.setItem(SESSION_KEY,'ok');
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app').classList.add('visible');
+    addLog(db,'system','Sistema','—','Sesión iniciada',{});
+    saveDB(db); renderAll();
+    err.textContent='';
+  } else {
+    inp.classList.add('error');
+    err.textContent='contraseña incorrecta';
+    inp.value='';
+    setTimeout(()=>inp.classList.remove('error'),400);
+  }
+}
+
+function logout(){
+  sessionStorage.removeItem(SESSION_KEY);
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('login-input').value='';
+  document.getElementById('login-error').textContent='';
+  toast('Sesión cerrada','info');
+}
+
+function checkSession(){
+  if(sessionStorage.getItem(SESSION_KEY)==='ok'){
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app').classList.add('visible');
+  }
+}
+
+document.getElementById('login-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter') tryLogin();
+});
+
+// ── BASE DE DATOS ────────────────────────────────────────────
+const DB_KEY='forge_hub_db';
+function loadDB(){try{const r=localStorage.getItem(DB_KEY);if(r)return JSON.parse(r);}catch(e){}return{projects:[],ideas:[],log:[],version:2};}
+function saveDB(db){try{localStorage.setItem(DB_KEY,JSON.stringify(db));}catch(e){}}
+function addLog(db,type,agent,project,description,meta={}){
+  const e={id:Date.now()+Math.random().toString(36).slice(2,6),ts:new Date().toISOString(),type,agent,project,description,meta};
+  db.log.unshift(e); return e;
+}
+
+let db=loadDB();
+let currentFilter='all';
+
+if(db.projects.length===0){
+  const now=new Date().toISOString();
+  db.projects.push({id:'p1',name:'El Rincón del Tupper',desc:'Ebooks batch cooking para parejas. Contenido social + email list + monetización recurrente.',type:'Infoproducto',status:'active',color:'purple',mrr:'1200',agents:['Claude','n8n'],created:now});
+  addLog(db,'project','Sistema','El Rincón del Tupper','Proyecto creado — Módulo 1 completado',{});
+  addLog(db,'exec','Claude','El Rincón del Tupper','Prompt maestro + template ebook 72 páginas generado',{});
+  addLog(db,'exec','Claude','El Rincón del Tupper','Calendario editorial 12 meses generado',{});
+  addLog(db,'system','Sistema','—','FORGE Hub v2 inicializado',{});
+  saveDB(db);
+}
+
+// ── UTILS ────────────────────────────────────────────────────
+function fmtTs(iso){const d=new Date(iso);return d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
+function typeTag(t){const m={idea:'lt-idea',exec:'lt-exec',agent:'lt-agent',project:'lt-project',system:'lt-system'};return`<span class="log-type ${m[t]||'lt-system'}">${t}</span>`;}
+function statusTag(s){const m={active:'t-active',idea:'t-idea',paused:'t-paused',new:'t-new'};const l={active:'● Activo',idea:'◎ Idea',paused:'◷ Pausa',new:'◈ Nuevo'};return`<span class="proj-tag ${m[s]||'t-idea'}">${l[s]||s}</span>`;}
+function toast(msg,type='info'){const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=msg;document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),3200);}
+
+// ── RENDER ───────────────────────────────────────────────────
+function updateBadges(){
+  document.getElementById('nb-projects').textContent=db.projects.length;
+  document.getElementById('nb-ideas').textContent=db.ideas.length;
+  document.getElementById('nb-log').textContent=db.log.length;
+  document.getElementById('m-proj').textContent=db.projects.length;
+  document.getElementById('m-proj-sub').textContent=db.projects.filter(p=>p.status==='active').length+' activos';
+  document.getElementById('m-ideas').textContent=db.ideas.length;
+  document.getElementById('m-log').textContent=db.log.length;
+  document.getElementById('sys-status').textContent=db.log.length+' entradas · '+db.projects.length+' proyectos';
+}
+function renderDashProjects(){
+  const el=document.getElementById('dash-projects');
+  if(!db.projects.length){el.innerHTML='<div class="log-empty">Sin proyectos aún</div>';return;}
+  el.innerHTML=db.projects.slice(0,4).map(p=>`<div class="proj-card c-${p.color||'purple'}"><div class="proj-head"><div class="proj-name">${p.name}</div>${statusTag(p.status)}</div><div class="proj-desc">${p.desc||'—'}</div><div class="proj-footer">${p.mrr?`<span class="proj-mrr">€${p.mrr}/mes</span>`:''}<div class="proj-agents">${(p.agents||[]).map(a=>`<span class="agent-chip">${a}</span>`).join('')}</div></div></div>`).join('');
+}
+function renderDashLog(){
+  const tb=document.getElementById('dash-log').querySelector('tbody');
+  if(!db.log.length){tb.innerHTML='<tr><td colspan="4" class="log-empty">Sin entradas</td></tr>';return;}
+  tb.innerHTML=db.log.slice(0,6).map(e=>`<tr><td>${typeTag(e.type)}</td><td class="log-agent">${e.agent}</td><td class="log-proj">${e.project||'—'}</td><td class="log-desc" title="${e.description}">${e.description}</td></tr>`).join('');
+}
+function renderDashIdeas(){
+  const tb=document.getElementById('dash-ideas').querySelector('tbody');
+  if(!db.ideas.length){tb.innerHTML='<tr><td colspan="4" class="log-empty">Sin ideas capturadas aún</td></tr>';return;}
+  tb.innerHTML=db.ideas.slice(0,5).map(e=>`<tr><td><span class="log-type lt-idea">idea</span></td><td class="log-proj">${e.name}</td><td class="log-agent">${e.agent||'—'}</td><td class="log-ts">${fmtTs(e.created)}</td></tr>`).join('');
+}
+function renderProjects(){
+  const el=document.getElementById('projects-list');
+  if(!db.projects.length){el.innerHTML='<div class="panel"><div class="log-empty">Sin proyectos. Usa "+ Proyecto".</div></div>';return;}
+  el.innerHTML='<div class="panel"><div class="panel-body">'+db.projects.map(p=>`<div class="proj-card c-${p.color||'purple'}"><div class="proj-head"><div class="proj-name">${p.name}</div>${statusTag(p.status)}<span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--muted);margin-left:auto">${fmtTs(p.created)}</span></div><div class="proj-desc">${p.desc||'—'}</div><div class="proj-footer">${p.mrr?`<span class="proj-mrr">MRR objetivo: €${p.mrr}/mes</span>`:''}<div class="proj-agents" style="margin-left:auto">${(p.agents||[]).map(a=>`<span class="agent-chip">${a}</span>`).join('')}</div><span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--muted)">${p.type||''}</span></div></div>`).join('')+'</div></div>';
+}
+function renderIdeas(){
+  const el=document.getElementById('ideas-list');
+  if(!db.ideas.length){el.innerHTML='<div class="panel"><div class="log-empty">Sin ideas. Usa "+ Idea".</div></div>';return;}
+  el.innerHTML='<div class="panel"><div class="panel-body"><table class="log-table"><thead><tr><th>Idea</th><th>Tipo</th><th>Agente</th><th>Proyecto</th><th>Potencial</th><th>Fecha</th></tr></thead><tbody>'+db.ideas.map(i=>`<tr><td style="font-weight:600;color:var(--accent2)">${i.name}</td><td><span class="log-type lt-idea">${i.type||'—'}</span></td><td class="log-agent">${i.agent||'—'}</td><td class="log-proj">${i.project||'—'}</td><td style="font-size:10px;color:var(--warn)">${i.potential||'—'}</td><td class="log-ts">${fmtTs(i.created)}</td></tr>`).join('')+'</tbody></table></div></div>';
+}
+function renderLog(){
+  const search=(document.getElementById('db-search')||{}).value||'';
+  let entries=db.log;
+  if(currentFilter!=='all')entries=entries.filter(e=>e.type===currentFilter);
+  if(search)entries=entries.filter(e=>e.description.toLowerCase().includes(search.toLowerCase())||e.agent.toLowerCase().includes(search.toLowerCase())||(e.project||'').toLowerCase().includes(search.toLowerCase()));
+  const byType=t=>db.log.filter(e=>e.type===t).length;
+  document.getElementById('db-total').textContent=db.log.length;
+  document.getElementById('db-c-ideas').textContent=byType('idea');
+  document.getElementById('db-c-exec').textContent=byType('exec');
+  document.getElementById('db-c-proj').textContent=byType('project');
+  document.getElementById('db-c-sys').textContent=byType('system');
+  const tbody=document.getElementById('full-log').querySelector('tbody');
+  if(!entries.length){tbody.innerHTML='<tr><td colspan="6" class="log-empty">Sin registros</td></tr>';return;}
+  tbody.innerHTML=entries.map(e=>`<tr><td style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim)">${db.log.length-db.log.indexOf(e)}</td><td class="log-ts">${fmtTs(e.ts)}</td><td>${typeTag(e.type)}</td><td class="log-agent">${e.agent}</td><td class="log-proj">${e.project||'—'}</td><td class="log-desc" title="${e.description}">${e.description}</td></tr>`).join('');
+}
+function renderAgentStats(){
+  const el=document.getElementById('agent-stats');
+  el.innerHTML='';
+  ['Claude','n8n','Notion AI','Sistema'].forEach(a=>{
+    const c=db.log.filter(e=>e.agent===a).length;
+    el.innerHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px"><span style="font-family:'JetBrains Mono',monospace;color:var(--text)">${a}</span><span style="font-family:'JetBrains Mono',monospace;color:var(--accent);font-weight:600">${c} acciones</span></div>`;
+  });
+}
+function renderAll(){updateBadges();renderDashProjects();renderDashLog();renderDashIdeas();renderProjects();renderIdeas();renderLog();}
+
+// ── NAVEGACIÓN ───────────────────────────────────────────────
+const viewTitles={dashboard:'Dashboard — Vista general',projects:'Proyectos',ideas:'Ideas Backlog',log:'Base de datos — Registro completo',agents:'Agentes IA'};
+function switchView(id,el){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  document.getElementById('topbar-title').textContent=viewTitles[id]||id;
+  if(id==='log')renderLog();
+  if(id==='agents')renderAgentStats();
+}
+function setFilter(f,el){currentFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderLog();}
+
+// ── MODAL ────────────────────────────────────────────────────
+function openModal(mode){
+  document.getElementById('modal-title').textContent=mode==='idea'?'✦ Nueva idea':'⊞ Nuevo proyecto';
+  document.getElementById('modal-sub').textContent='se guarda en BD con timestamp y agente';
+  const po=db.projects.map(p=>`<option>${p.name}</option>`).join('');
+  if(mode==='idea'){
+    document.getElementById('modal-body').innerHTML=`<div class="field"><label>Nombre de la idea</label><input id="f-name" placeholder="ej. Newsletter semanal..."></div><div class="field"><label>Descripción</label><textarea id="f-desc" placeholder="¿Qué problema resuelve? ¿A quién va dirigido?"></textarea></div><div class="field-row"><div class="field"><label>Tipo</label><select id="f-type"><option value="">— tipo —</option><option>Infoproducto / Ebook</option><option>SaaS / App</option><option>Contenido / Newsletter</option><option>Automatización</option><option>Afiliación</option><option>Agencia / Servicio</option><option>Otro</option></select></div><div class="field"><label>Agente principal</label><select id="f-agent"><option value="">— agente —</option><option>Claude</option><option>Claude + n8n</option><option>Claude + Notion</option><option>Stack completo</option></select></div></div><div class="field-row"><div class="field"><label>Proyecto relacionado</label><select id="f-project"><option value="">— ninguno —</option>${po}</select></div><div class="field"><label>Potencial monetización</label><input id="f-potential" placeholder="ej. €500/mes"></div></div><div class="modal-foot"><button class="btn-cancel2" onclick="closeModal()">Cancelar</button><button class="btn-save2" onclick="saveIdea()">Guardar idea</button></div>`;
+  } else {
+    document.getElementById('modal-body').innerHTML=`<div class="field"><label>Nombre del proyecto</label><input id="f-name" placeholder="ej. Newsletter semanal..."></div><div class="field"><label>Descripción</label><textarea id="f-desc" placeholder="¿Qué es? ¿A quién va dirigido?"></textarea></div><div class="field-row"><div class="field"><label>Tipo</label><select id="f-type"><option value="">— tipo —</option><option>Infoproducto / Ebook</option><option>SaaS / App</option><option>Contenido / Newsletter</option><option>Automatización</option><option>Afiliación</option><option>Agencia / Servicio</option></select></div><div class="field"><label>Estado</label><select id="f-status"><option value="idea">Idea</option><option value="new">Nuevo</option><option value="active">Activo</option><option value="paused">Pausado</option></select></div></div><div class="field-row"><div class="field"><label>Agente principal</label><select id="f-agent"><option value="">— agente —</option><option>Claude</option><option>Claude + n8n</option><option>Claude + Notion</option><option>Stack completo</option></select></div><div class="field"><label>MRR objetivo (€)</label><input id="f-mrr" placeholder="ej. 1200" type="number"></div></div><div class="field"><label>Color</label><select id="f-color"><option value="purple">Púrpura</option><option value="green">Verde</option><option value="amber">Ámbar</option><option value="blue">Azul</option><option value="pink">Rosa</option></select></div><div class="modal-foot"><button class="btn-cancel2" onclick="closeModal()">Cancelar</button><button class="btn-save2" onclick="saveProject()">Guardar proyecto</button></div>`;
+  }
+  document.getElementById('modal').classList.add('open');
+  setTimeout(()=>{const f=document.getElementById('f-name');if(f)f.focus();},100);
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+
+function saveIdea(){
+  const name=(document.getElementById('f-name')||{}).value?.trim();
+  if(!name){document.getElementById('f-name').focus();return;}
+  const idea={id:Date.now().toString(),name,desc:(document.getElementById('f-desc')||{}).value?.trim()||'',type:(document.getElementById('f-type')||{}).value||'',agent:(document.getElementById('f-agent')||{}).value||'Claude',project:(document.getElementById('f-project')||{}).value||'',potential:(document.getElementById('f-potential')||{}).value?.trim()||'',created:new Date().toISOString()};
+  db.ideas.unshift(idea);
+  addLog(db,'idea',idea.agent||'Claude',idea.project||'—','Idea capturada: '+name,{type:idea.type,potential:idea.potential});
+  saveDB(db);renderAll();closeModal();toast('Idea guardada en BD ✦','success');
+}
+function saveProject(){
+  const name=(document.getElementById('f-name')||{}).value?.trim();
+  if(!name){document.getElementById('f-name').focus();return;}
+  const proj={id:Date.now().toString(),name,desc:(document.getElementById('f-desc')||{}).value?.trim()||'',type:(document.getElementById('f-type')||{}).value||'',status:(document.getElementById('f-status')||{}).value||'idea',agents:[(document.getElementById('f-agent')||{}).value||'Sistema'],mrr:(document.getElementById('f-mrr')||{}).value||'',color:(document.getElementById('f-color')||{}).value||'purple',created:new Date().toISOString()};
+  db.projects.unshift(proj);
+  addLog(db,'project',proj.agents[0]||'Sistema',name,'Proyecto creado: '+name,{type:proj.type,status:proj.status});
+  saveDB(db);renderAll();closeModal();toast('Proyecto guardado en BD','success');
+}
+function exportLog(){
+  const header='#,Timestamp,Tipo,Agente,Proyecto,Descripcion\n';
+  const rows=db.log.map((e,i)=>[db.log.length-i,fmtTs(e.ts),e.type,e.agent,e.project||'','"'+e.description+'"'].join(',')).join('\n');
+  const blob=new Blob([header+rows],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='forge_hub_log.csv';a.click();
+  URL.revokeObjectURL(url);
+  addLog(db,'system','Sistema','—','Exportación CSV: '+db.log.length+' registros',{});
+  saveDB(db);renderAll();toast('Log exportado como CSV','info');
+}
+
+// ── KEYBOARD ─────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openModal('idea');}
+  if(e.key==='Escape')closeModal();
+});
+
+// ── INIT ─────────────────────────────────────────────────────
+document.getElementById('topbar-meta').textContent=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+checkSession();
+renderAll();
+</script>
+</body>
+</html>
